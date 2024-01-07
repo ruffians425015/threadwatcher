@@ -271,9 +271,19 @@
                         if (procData.started === procData.fulfilled && procData.endOfLine) {
                             succFunc(procData.all_posts);
                         } else {
-                            setTimeout(() => {
-                                getPostFromArchive(pageNum + 1);
-                            }, 700);
+                            if (procData.retries > 3) {
+                                succFunc(procData.all_posts);
+                            } else {
+                                if (procData.started === procData.fulfilled) {
+                                    setTimeout(() => {
+                                        getPostFromArchive(pageNum + 1);
+                                    }, 700);
+                                } else {
+                                    setTimeout(() => {
+                                        getAllPostFromThreadOPs(threadOPs, threadOPIdx + 1, pageNum);
+                                    }, 400);
+                                }
+                            }
                         }
                     }
                     new Promise((succFunc, errFunc) => {
@@ -335,7 +345,7 @@
                         if (errMsg == "No results found.") {
                             procData.endOfLine = true;
                             updateLoadFunc(procData.fulfilled, procData.started);
-                            succFunc(procData.all_posts);
+                            procData.started === procData.fulfilled && succFunc(procData.all_posts);
                         } else if (errMsg == "The search backend is currently unavailable.") {
                             errFunc("Archives search is down.");
                         } else {
@@ -688,6 +698,7 @@
         <div class="row">
             <div class="column">
                 <div class="row">
+                    <!-- <input type="text" id="yt-metadata" name="yt-metadata" placeholder="yt-metadata API link" /> -->
                     <input type="text" id="yt" name="yt" placeholder="youtube video ID" />
                     <button id="load">Load Video</button>
                     <p id="status">Waiting for input...</p>
@@ -725,11 +736,16 @@
                     <ul class="info-container">
                         <li><b>1/7/24</b>
                             <ul>
-                                <li>Init /baubau/ version, unofficially and non-formally forked from https://chumputer.github.io/threadwatcher/</li>
+                                <li>Init /baubau/ version, unofficially and non-formally forked from <a href="https://chumputer.github.io/threadwatcher/">https://chumputer.github.io/threadwatcher/</a></li>
                             </ul>
                         </li>
                     </ul>
                 </div>
+                <h4 class="info-title">Credits</h4>
+                <ol class="info-container">
+                    <li><a href="https://twitter.com/Seblueka/status/1740246403778302347">@Seblueka</a> for Background image</li>
+                    <li><a href="https://twitter.com/WiaoEmo/status/1743619694957920430">@WiaoEmo</a> for Loading GIF</li>
+                </ol>
                 <p class="info-text">For any bugs/issues, contact: [TODO]
                 <p>
             </div>
