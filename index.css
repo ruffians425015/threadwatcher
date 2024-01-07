@@ -1,0 +1,190 @@
+html {
+    height: 100%;
+}
+
+body {
+    height: 100%;
+    margin: 0px;
+
+    background: url(fwmc.jpg) center center no-repeat;
+    no-repeat center center fixed: ;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+}
+
+.info-title {
+    margin-left: 20px;
+}
+
+.info-text {
+    margin-left: 20px;
+}
+
+.info-container {
+    padding-right: 20px;
+}
+
+.info {
+    background: rgba(230, 230, 230, 0.5);
+    border-radius: 20px;
+    width: fit-content;
+    margin: 20px;
+}
+
+#inputs {
+    height: 40px;
+}
+
+#inputs > div > div:first-child,
+.main > div:first-child {
+  flex: 2;
+}
+
+.comments {
+    height: 100%;
+}
+
+.comments-container {
+    height: 100%;
+    overflow-y: auto;
+}
+
+.greentext {
+    color: #789922;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  flex: 1;
+}
+
+.contentcol {
+    /*width: 33%;*/
+    /*flex: 2;*/
+}
+
+.main {
+  height: calc(100% - 40px);
+}
+
+.submain {
+    height: 100%;
+    max-width: 25%;
+}
+
+.overlay {
+    position: fixed;
+    width: 100%;
+    left: 0px;
+    top: 0px;
+    height: 100%;
+    background-color: #e9e9e9;
+    opacity: 0.8;
+    z-index: 2;
+}
+
+.fadeout {
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s linear 300ms, opacity 300ms;
+}
+
+.fadein {
+  visibility: visible;
+  opacity: 0.8;
+  transition: visibility 0s linear 0s, opacity 300ms;
+}
+
+.fadeinfull {
+  visibility: visible;
+  opacity: 1.0;
+  transition: visibility 0s linear 0s, opacity 300ms;
+}
+
+.loader {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    z-index: 3;
+    background: url(loading.gif) no-repeat center center fixed;
+}
+
+.progress {
+    font-size: 26px;
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 4;
+    top: calc(50% + 100px);
+}
+
+#player-container {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%;
+}
+
+#player {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.hidden {
+    display: none;
+}
+
+.cl-title {
+  cursor: pointer;
+}
+
+.no-select {
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ===== Scrollbar CSS ===== */
+/* Firefox */
+* {
+  scrollbar-width: auto;
+  scrollbar-color: #d8b953 rgba(129, 229, 253, 0.2);
+}
+
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 14px;
+}
+
+*::-webkit-scrollbar-track {
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 45%, rgba(129, 229, 253, 0.8), rgba(129, 229, 253, 0.8), rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0) 100%);
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #d8b953;
+  border-radius: 14px;
+  border: 0px none #d8b953;
+}

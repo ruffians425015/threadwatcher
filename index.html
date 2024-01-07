@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base href="." target="_top">
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <link rel="stylesheet" href="yotsuba.css">
+    <link rel="stylesheet" href="index.css">
+    <link rel="shortcut icon" type="image/jpg" href="favicon.ico" />
+    <title>Threadwatcher</title>
+    <script src="strftime.js"></script>
+    <script>
+        (function () {
+            var ytVidPlayer = null;
+            const archivePalanqJP = {
+                'root': "https://archive.palanq.win/",
+                'board': 'jp',
+                'image': (_0x10f2b8, _0x5b0527) => {
+                    return _0x10f2b8;
+                }
+            };
+            const archiveVT = {
+                'root': "https://archive.palanq.win/",
+                'board': 'vt',
+                'image': (_0x5b73b8, _0xfb7aea) => {
+                    return _0x5b73b8;
+                }
+            };
+            const archiveMoeJP = {
+                'root': 'https://archived.moe/',
+                'board': 'jp',
+                'image': (_0x30952f, _0x1c96af) => {
+                    if (!_0x1c96af) {
+                        return _0x30952f;
+                    }
+                    const _0x45cbc7 = new URL(_0x1c96af).pathname.split('/');
+                    if (_0x45cbc7.length === 0x0) {
+                        return _0x30952f;
+                    }
+                    return "https://warosu.org/jp/full_image/" + _0x45cbc7[_0x45cbc7.length - 0x1];
+                }
+            };
+            const reallyOldThreadArr = [{
+                'num': "26229283",
+                'thread_num': '26229283',
+                'timestamp': 0x5f5d4320
+            }, {
+                'num': "26229260",
+                'thread_num': "26229260",
+                'timestamp': 0x5f5d4315
+            }, {
+                'num': '26212494',
+                'thread_num': '26212494',
+                'timestamp': 0x5f5d1040
+            }, {
+                'num': "26198779",
+                'thread_num': "26198779",
+                'timestamp': 0x5f5ccc89
+            }, {
+                'num': '26197397',
+                'thread_num': '26197397',
+                'timestamp': 0x5f5cc939
+            }, {
+                'num': "26196497",
+                'thread_num': "26196497",
+                'timestamp': 0x5f5cc798
+            }, {
+                'num': "26195975",
+                'thread_num': '26195975',
+                'timestamp': 0x5f5cc617
+            }, {
+                'num': "26192330",
+                'thread_num': "26192330",
+                'timestamp': 0x5f5cb82f
+            }, {
+                'num': '26188875',
+                'thread_num': "26188875",
+                'timestamp': 0x5f5cafb8
+            }, {
+                'num': "26188865",
+                'thread_num': "26188865",
+                'timestamp': 0x5f5cafb0
+            }, {
+                'num': '26182382',
+                'thread_num': "26182382",
+                'timestamp': 0x5f5c76fd
+            }, {
+                'num': "26164655",
+                'thread_num': "26164655",
+                'timestamp': 0x5f5b882c
+            }, {
+                'num': "26144298",
+                'thread_num': "26144298",
+                'timestamp': 0x5f5a7a87
+            }, {
+                'num': '26130331',
+                'thread_num': "26130331",
+                'timestamp': 0x5f59b7b5
+            }, {
+                'num': "26114559",
+                'thread_num': "26114559",
+                'timestamp': 0x5f5903a6
+            }, {
+                'num': '26106382',
+                'thread_num': '26106382',
+                'timestamp': 0x5f58bd57
+            }, {
+                'num': "26097530",
+                'thread_num': "26097530",
+                'timestamp': 0x5f586ed5
+            }];
+            function pickArchive(timestamp) {
+                if (timestamp > 0x6013ef6b) {
+                    return archiveVT;
+                } else {
+                    return timestamp > 0x5f5d7147 ? archivePalanqJP : archiveMoeJP;
+                }
+            }
+            var postData = {
+                'liveStreamingDetails': {},
+                'start': 0x0,
+                'threads': {
+                    'hlgg': {
+                        'posts': [],
+                        'added_posts': [],
+                        'leftCursor': 0x0,
+                        'rightCursor': 0x0,
+                        'lastUpdate': 0x0,
+                        'comments': null
+                    },
+                    'ggg': {
+                        'posts': [],
+                        'added_posts': [],
+                        'leftCursor': 0x0,
+                        'rightCursor': 0x0,
+                        'comments': null
+                    }
+                },
+                'updateInterval': 0x0,
+                'preSplit': false,
+                'ytID': 0x0
+            };
+            window.curVideoData = postData;
+            var loadStatus = {
+                'iframeLoading': false,
+                'ytAPI': false,
+                'chanThreads': false
+            };
+            var docEleData = {
+                'ytID': null,
+                'stat': null,
+                'spinner': null,
+                'overlay': null,
+                'progress': null
+            };
+            function getLoadingText() {
+                if (loadStatus.iframeLoading || loadStatus.ytAPI || loadStatus.chanThreads) {
+                    return "Loading...";
+                }
+                if (ytVidPlayer === null) {
+                    return "Waiting for input...";
+                }
+                return "Ready";
+            }
+            function toggleLoadingAnim(optText) {
+                docEleData.stat.innerHTML = optText || getLoadingText();
+                if (docEleData.stat.innerHTML === "Loading...") {
+                    startLoadAnim();
+                } else {
+                    endLoadAnim();
+                }
+            }
+            function searchThreads(archiveData, threadName, pageNum, startTime, endTime, succFunc, errFunc) {
+                var apiURL = archiveData.root + "_/api/chan/search?board=" + archiveData.board + "&order=desc&subject=%22" + threadName + "%22&page=" + pageNum + '&end=' + endTime + '&start=' + startTime;
+                function onLoad() {
+                    if (this.status == 0xc8) {
+                        var resParsed = JSON.parse(this.responseText);
+                        if (resParsed.error) {
+                            errFunc(resParsed.error);
+                        } else {
+                            succFunc(resParsed[0x0].posts);
+                        }
+                    } else {
+                        errFunc("unable to get 4chan threads");
+                    }
+                }
+                var req = new XMLHttpRequest();
+                req.addEventListener("load", onLoad);
+                req.addEventListener("error", () => {
+                    errFunc("unable to get 4chan threads");
+                });
+                req.open('GET', apiURL);
+                req.send();
+            }
+            function timeDiff(endTs, startTs) {
+                return endTs.timestamp - startTs.timestamp;
+            }
+            function getThreadPost(archiveData, num, startTime, endTime, succFunc, errFunc) {
+                var apiURL = archiveData.root + "_/api/chan/thread?board=" + archiveData.board + "&num=" + num;
+                function onload() {
+                    if (this.status == 0xc8) {
+                        var resParsed = JSON.parse(this.responseText);
+                        if (resParsed.error) {
+                            errFunc(resParsed.error);
+                            return;
+                        }
+                        resParsed = resParsed[num];
+                        window.thread = resParsed;
+                        var filteredPosts = [];
+                        if (resParsed && resParsed.op && resParsed.op.timestamp > startTime && resParsed.op.timestamp < endTime) {
+                            filteredPosts.push(resParsed.op);
+                        }
+                        if (resParsed.posts) {
+                            for (const [_0x331d77, post] of Object.entries(resParsed.posts)) {
+                                if (post.timestamp > startTime && post.timestamp < endTime) {
+                                    filteredPosts.push(post);
+                                }
+                            }
+                        }
+                        filteredPosts.sort(timeDiff);
+                        succFunc(filteredPosts);
+                    } else {
+                        errFunc("unable to get 4chan thread");
+                    }
+                }
+                var req = new XMLHttpRequest();
+                req.addEventListener("load", onload);
+                req.addEventListener('error', () => {
+                    errFunc("unable to get 4chan thread");
+                });
+                req.open("GET", apiURL);
+                req.send();
+            }
+            function fetchPosts(archiveData, titleText, vidMetadata, updateLoadFunc, succFunc, errFunc) {
+                var startTimeDiv = new Date(vidMetadata.actualStartTime).getTime() / 0x3e8;
+                var endTimeDiv = new Date(vidMetadata.actualEndTime).getTime() / 0x3e8;
+                var startTime = new Date(vidMetadata.actualStartTime);
+                startTime.setDate(startTime.getDate() - 0x1);
+                startTime = strftime("%Y-%m-%d", startTime);
+                var endTime = new Date(vidMetadata.actualEndTime);
+                endTime.setDate(endTime.getDate() + 0x2);
+                endTime = strftime("%Y-%m-%d", endTime);
+                var procData = {
+                    'started': 0x0,
+                    'fulfilled': 0x0,
+                    'endOfLine': false,
+                    'retries': {},
+                    'thread_retries': {},
+                    'all_posts': [],
+                    'out_of_range': 0x0
+                };
+                function getAllPostFromThreadOPs(threadOPs, threadOPIdx, pageNum) {
+                    window.ops = threadOPs;
+                    if (threadOPIdx >= threadOPs.length) {
+                        succFunc(procData.all_posts);
+                        return;
+                    }
+                    if (threadOPs[threadOPIdx].timestamp > endTimeDiv) {
+                        getAllPostFromThreadOPs(threadOPs, threadOPIdx + 0x1, pageNum);
+                        return;
+                    }
+                    procData.retries[pageNum][threadOPIdx] = procData.retries[pageNum][threadOPIdx] | 0x0;
+                    function storePostsInProcData(postsData) {
+                        procData.fulfilled += 0x1;
+                        if (postsData.length === 0x0) {
+                            procData.out_of_range += 0x1;
+                        } else {
+                            procData.all_posts = procData.all_posts.concat(postsData);
+                        }
+                        updateLoadFunc(procData.fulfilled, procData.started);
+                        if (procData.started === procData.fulfilled && procData.endOfLine) {
+                            succFunc(procData.all_posts);
+                        } else {
+                            setTimeout(() => {
+                                getPostFromArchive(pageNum + 0x1);
+                            }, 0x2bc);
+                        }
+                    }
+                    new Promise((succFunc, errFunc) => {
+                        getThreadPost(pickArchive(threadOPs[threadOPIdx].timestamp), threadOPs[threadOPIdx].num, startTimeDiv, endTimeDiv, succFunc, errFunc);
+                    }).then(_0xeeab73 => {
+                        storePostsInProcData(_0xeeab73);
+                    })['catch'](errMsg => {
+                        procData.retries[pageNum][threadOPIdx] += 0x1;
+                        if (procData.started === procData.fulfilled && procData.endOfLine) {
+                            succFunc(procData.all_posts);
+                        } else {
+                            if (errMsg === "Thread not found.") {
+                                procData.retries[pageNum][threadOPIdx] = 0x0;
+                                procData.fulfilled += 0x1;
+                                setTimeout(() => {
+                                    getAllPostFromThreadOPs(threadOPs, threadOPIdx + 0x1, pageNum);
+                                }, 0x190);
+                            } else if (procData.retries[pageNum][threadOPIdx] < 0x3) {
+                                setTimeout(() => {
+                                    getAllPostFromThreadOPs(threadOPs, threadOPIdx, pageNum);
+                                }, 0x190);
+                            } else {
+                                procData.retries[pageNum][threadOPIdx] = 0x0;
+                                procData.fulfilled += 0x1;
+                                setTimeout(() => {
+                                    getAllPostFromThreadOPs(threadOPs, threadOPIdx + 0x1, pageNum);
+                                }, 0x190);
+                            }
+                        }
+                    });
+                }
+                function getPostFromArchive(pageNum, knownThreadArr = []) {
+                    procData.thread_retries[pageNum] = procData.thread_retries[pageNum] | 0x0;
+                    procData.retries[pageNum] = {};
+                    new Promise((succFunc, errFunc) => {
+                        if (knownThreadArr.length === 0x0) {
+                            searchThreads(archiveData, titleText, pageNum, startTime, endTime, succFunc, errFunc);
+                        } else {
+                            succFunc(knownThreadArr);
+                        }
+                    }).then(listThreads => {
+                        var threadFound = 0x0;
+                        for (const threadOP of listThreads) {
+                            if (threadOP.timestamp > endTimeDiv) {
+                                continue;
+                            }
+                            threadFound += 0x1;
+                        }
+                        if (threadFound > 0x0) {
+                            procData.started += threadFound;
+                            updateLoadFunc(procData.fulfilled, procData.started);
+                            getAllPostFromThreadOPs(listThreads, 0x0, pageNum);
+                        } else {
+                            setTimeout(() => {
+                                getPostFromArchive(pageNum + 0x1);
+                            }, 0x2bc);
+                        }
+                    })['catch'](errMsg => {
+                        if (errMsg == "No results found.") {
+                            procData.endOfLine = true;
+                            updateLoadFunc(procData.fulfilled, procData.started);
+                            succFunc(procData.all_posts);
+                        } else if (errMsg == "The search backend is currently unavailable.") {
+                            errFunc("Archives search is down.");
+                        } else {
+                            procData.thread_retries[pageNum] += 0x1;
+                            if (procData.thread_retries[pageNum] < 0x3) {
+                                setTimeout(() => {
+                                    getPostFromArchive(pageNum);
+                                }, 0x2bc);
+                            } else {
+                                errFunc("Unable to communicate with archives. Try again later.");
+                            }
+                        }
+                    });
+                }
+                if (startTimeDiv < 0x5f5d7147) {
+                    getPostFromArchive(0x0, reallyOldThreadArr);
+                } else {
+                    getPostFromArchive(0x1);
+                }
+            }
+            function getVidMetadata(vidID, succFunc, errFunc) {
+                function onload() {
+                    var resParsed = JSON.parse(this.responseText);
+                    if (this.status == 0xc8) {
+                        if (resParsed.error) {
+                            errFunc(resParsed.error);
+                        } else {
+                            succFunc(resParsed);
+                        }
+                    } else {
+                        errFunc("unable to get yt video metadata: " + resParsed.error);
+                    }
+                }
+                var req = new XMLHttpRequest();
+                req.addEventListener("load", onload);
+                req.addEventListener("error", () => {
+                    var errParsed = JSON.parse(this.responseText);
+                    errFunc("unable to get yt video metadata: " + errParsed.error);
+                });
+                req.open('GET', "https://script.google.com/macros/s/AKfycbx8aqG3kNaPkS5HCcsM0uXiNpFNKoxhO9yglvf0bZuwrvd90hZld2Kqt9CU0CqG34z2/exec?v=" + vidID);
+                req.send();
+            }
+            function getYTID(ytURL) {
+                if (!ytURL.includes("youtube.com") && !ytURL.includes("youtu.be")) {
+                    return ytURL;
+                }
+                const urlParsed = new URL(ytURL);
+                if (urlParsed.host === "youtu.be") {
+                    return urlParsed.pathname.substring(0x1);
+                }
+                const urlParams = new URL(ytURL).searchParams;
+                return urlParams.get('v');
+            }
+            function generateFilesizeText(fileSize, inBit = false, _0x44c7f1 = 0x1) {
+                const _0x4e874a = inBit ? 0x3e8 : 0x400;
+                if (Math.abs(fileSize) < _0x4e874a) {
+                    return fileSize + " B";
+                }
+                const _0x25d180 = inBit ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'] : ["KiB", "MiB", 'GiB', "TiB", "PiB", "EiB", "ZiB", "YiB"];
+                let _0x445d32 = -0x1;
+                const _0x25ae67 = 0xa ** _0x44c7f1;
+                do {
+                    fileSize /= _0x4e874a;
+                    ++_0x445d32;
+                } while (Math.round(Math.abs(fileSize) * _0x25ae67) / _0x25ae67 >= _0x4e874a && _0x445d32 < _0x25d180.length - 0x1);
+                return fileSize.toFixed(_0x44c7f1) + " " + _0x25d180[_0x445d32];
+            }
+            function generatePostElement(postData) {
+                const archiveData = pickArchive(postData.timestamp);
+                var postMediaEle = '';
+                if (postData.media !== null) {
+                    var sizeText = generateFilesizeText(parseInt(postData.media.media_size));
+                    var thumbLink = archiveData.image(postData.media.thumb_link, postData.media.remote_media_link);
+                    var mediaLink = archiveData.image(postData.media.media_link, postData.media.remote_media_link);
+                    if (!mediaLink) {
+                        mediaLink = thumbLink;
+                    }
+                    postMediaEle = "<div class=\"file\">\n            <div class=\"fileText\">\n                <span class=\"file-info\">\n                    <a href=\"" + mediaLink + "\" target=\"_blank\">" + postData.media.media_orig + "</a> (" + sizeText + ", " + postData.media.media_w + 'x' + postData.media.media_h + ")\n                </span>\n            </div>\n            <a class=\"fileThumb\" href=\"" + mediaLink + "\" target=\"_blank\">\n                <img src=\"" + thumbLink + "\" alt=\"" + sizeText + "\" data-md5=\"" + postData.media.media_hash + "\" style=\"height: " + postData.media.preview_h + "px; width: " + postData.media.preview_w + "px;\" loading=\"lazy\">\n            </a>\n        </div>";
+                }
+                var resEle = document.createElement('div');
+                resEle.classList = "post reply";
+                resEle.innerHTML = "<div class=\"postInfo desktop\">\n            <input type=\"checkbox\" value=\"delete\">\n            <span class=\"nameBlock\">\n                <span class=\"name\">" + postData.name + "</span>\n            </span>\n            <span class=\"dateTime\">" + postData.fourchan_date + "</span>\n            <span class=\"postNum desktop\"><a href=\"" + archiveData.root + archiveData.board + "/thread/" + postData.thread_num + '/#' + postData.num + "\" title=\"Link to this post\">No.</a><a href=\"" + archiveData.root + archiveData.board + "/thread/" + postData.thread_num + '/#' + postData.num + "\" title=\"Reply to this post\">" + postData.num + "</a></span>\n        </div>\n        " + postMediaEle + "\n        <blockquote class=\"postMessage\">" + postData.comment_processed + '</blockquote>';
+                return resEle;
+            }
+            function _0x2f5caa(_0x2c52db, _0x26e522) {
+                var _0x50ccb4 = generatePostElement(_0x2c52db);
+                _0x26e522.appendChild(_0x50ccb4);
+                _0x26e522.scrollTop = _0x26e522.scrollHeight;
+                return _0x50ccb4;
+            }
+            function _0x37a2db(_0x239827, _0x2ea093) {
+                var _0x51effa = generatePostElement(_0x239827);
+                _0x2ea093.prepend(_0x51effa);
+                _0x2ea093.scrollTop = _0x2ea093.scrollHeight;
+                return _0x51effa;
+            }
+            function prepVidPlayer(vidID, succFunc, errFunc) {
+                if (ytVidPlayer === null) {
+                    ytVidPlayer = new YT.Player("player", {
+                        'height': "390",
+                        'width': "640",
+                        'videoId': vidID,
+                        'playerVars': {
+                            'playsinline': 0x1
+                        },
+                        'events': {
+                            'onReady': () => {
+                                succFunc(true);
+                            }
+                        }
+                    });
+                } else {
+                    ytVidPlayer.cueVideoById(vidID);
+                    succFunc(true);
+                }
+            }
+            function changeStat(statText) {
+                docEleData.progress.innerText = statText;
+            }
+            function showVidPlayer() {
+                docEleData.playerContainer.classList = '';
+            }
+            function hidevidPlayer() {
+                docEleData.playerContainer.classList = "hidden";
+            }
+            function clearPost() {
+                postData.threads.ggg.posts = [];
+                postData.threads.hlgg.posts = [];
+                for (const _0x4f5cf2 of postData.threads.ggg.added_posts) {
+                    _0x4f5cf2.remove();
+                }
+                for (const _0x46dec7 of postData.threads.hlgg.added_posts) {
+                    _0x46dec7.remove();
+                }
+                postData.threads.ggg.added_posts = [];
+                postData.threads.hlgg.added_posts = [];
+            }
+            function storeVidCache(vidID) {
+                try {
+                    postData.ytID = vidID;
+                    window.localStorage.setItem("vid-cache", JSON.stringify(postData));
+                } catch (_0x4ac966) {
+                    return;
+                }
+            }
+            function fetchVidCache(vidID) {
+                var resCache = window.localStorage.getItem("vid-cache");
+                if (resCache) {
+                    const resParsed = JSON.parse(resCache);
+                    if (resParsed.ytID == vidID) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            function prepVidCacheData(_0x2ac0a9) {
+                var vidCacheData = window.localStorage.getItem("vid-cache");
+                if (vidCacheData) {
+                    const vidCacheDataParsed = JSON.parse(vidCacheData);
+                    postData.livestreamingDetails = vidCacheDataParsed.livestreamingDetails;
+                    postData.start = vidCacheDataParsed.start;
+                    postData.threads = vidCacheDataParsed.threads;
+                    postData.preSplit = vidCacheDataParsed.preSplit;
+                    postData.threads.hlgg.comments = document.getElementById("comments");
+                    postData.threads.ggg.comments = document.getElementById("comments2");
+                }
+            }
+            function onClickLoad() {
+                loadStatus.iframeLoading = true;
+                loadStatus.ytAPI = true;
+                loadStatus.chanThreads = true;
+                toggleLoadingAnim();
+                changeStat("Loading YouTube data...");
+                clearInterval(postData.updateInterval);
+                clearPost();
+                const vidID = getYTID(docEleData.ytID.value);
+                if (fetchVidCache(vidID)) {
+                    prepVidCacheData(vidID);
+                    showVidPlayer();
+                    var _0x166fca = new Promise((succFunc, errFunc) => {
+                        getVidMetadata(vidID, succFunc, errFunc);
+                    }).then(_0x4bf750 => {
+                        return new Promise((succFunc, errFunc) => {
+                            prepVidPlayer(getYTID(docEleData.ytID.value), succFunc, errFunc);
+                        });
+                    }).then(_0x53ba8c => {
+                        loadStatus.iframeLoading = false;
+                        loadStatus.ytAPI = false;
+                        loadStatus.chanThreads = false;
+                        toggleLoadingAnim();
+                        postData.updateInterval = setInterval(() => {
+                            updatePostData();
+                        }, 0x1f4);
+                    })["catch"](errMsg => {
+                        loadStatus.iframeLoading = false;
+                        loadStatus.ytAPI = false;
+                        loadStatus.chanThreads = false;
+                        toggleLoadingAnim("Waiting for input...");
+                        alert(errMsg);
+                    });
+                    return;
+                }
+                hidevidPlayer();
+                var _0x166fca = new Promise((succFunc, errFunc) => {
+                    getVidMetadata(vidID, succFunc, errFunc);
+                }).then(vidMetadata => {
+                    changeStat("Loading /hlgg/ data...");
+                    loadStatus.ytAPI = false;
+                    postData.liveStreamingDetails = vidMetadata;
+                    postData.start = new Date(vidMetadata.actualStartTime).getTime() / 1e3;
+                    postData.preSplit = postData.start < 1611919211;
+                    return new Promise((succFunc, errFunc) => {
+                        fetchPosts(postData.preSplit ? archivePalanqJP : archiveVT, "hololive global", vidMetadata, (_0x5c47a8, _0x135785) => {
+                            changeStat("Loading /hlgg/ data (" + _0x5c47a8 + '/' + _0x135785 + ")...");
+                        }, succFunc, errFunc);
+                    });
+                }).then(hlggPosts => {
+                    postData.threads.hlgg.posts = hlggPosts;
+                    postData.threads.hlgg.posts.sort(timeDiff);
+                    if (postData.preSplit) return Promise.resolve([]);
+                    changeStat("Loading /baubau/ data...");
+                    return new Promise((succfunc, errFunc) => {
+                        fetchPosts(archiveVT, "baubau", postData.liveStreamingDetails, (_0x1b6709, _0x59316e) => {
+                            changeStat("Loading /baubau/ data (" + _0x1b6709 + '/' + _0x59316e + ')...');
+                        }, succfunc, errFunc);
+                    });
+                }).then(gggPosts => {
+                    postData.threads.ggg.posts = gggPosts;
+                    postData.threads.ggg.posts.sort(timeDiff);
+                    loadStatus.chanThreads = false;
+                    changeStat("Loading YT Player...");
+                    storeVidCache(vidID);
+                    showVidPlayer();
+                    return new Promise((succfunc, errFunc) => {
+                        prepVidPlayer(vidID, succfunc, errFunc);
+                    });
+                }).then(_0x2ac93b => {
+                    loadStatus.iframeLoading = false;
+                    toggleLoadingAnim();
+                    postData.updateInterval = setInterval(() => {
+                        updatePostData();
+                    }, 0x1f4);
+                })["catch"](_0x5bd61e => {
+                    loadStatus.iframeLoading = false;
+                    loadStatus.ytAPI = false;
+                    loadStatus.chanThreads = false;
+                    toggleLoadingAnim("Waiting for input...");
+                    alert(_0x5bd61e);
+                });
+            }
+            function _0x43005b(_0xa962a2, _0x19a5ee) {
+                var _0x5f1021 = window.localStorage.getItem(_0x19a5ee);
+                if (_0x5f1021) {
+                    _0xa962a2.value = _0x5f1021;
+                }
+                _0xa962a2.addEventListener("change", _0x57e502 => {
+                    window.localStorage.setItem(_0x19a5ee, _0xa962a2.value);
+                });
+            }
+            function updatePostData() {
+                var timestamp = ytVidPlayer.getCurrentTime() + postData.start;
+                _0x490e20(postData.threads.hlgg, timestamp);
+                !postData.preSplit && _0x490e20(postData.threads.ggg, timestamp);
+            }
+            function _0x490e20(threadList, timestamp) {
+                var lastPostIdx = threadList.posts.length;
+                for (var idx = 0x0; idx < threadList.posts.length; idx++) {
+                    if (threadList.posts[idx].timestamp > timestamp) {
+                        lastPostIdx = idx;
+                        break;
+                    }
+                }
+                const _0x3f509f = threadList.rightCursor;
+                var _0x4baa2b = Math.max(0x0, lastPostIdx - 0x1e);
+                if (threadList.leftCursor > lastPostIdx || threadList.rightCursor < _0x4baa2b) {
+                    while (threadList.added_posts.length > 0x0) {
+                        threadList.added_posts.pop().remove();
+                    }
+                    threadList.leftCursor = _0x4baa2b;
+                    threadList.rightCursor = _0x4baa2b;
+                }
+                while (threadList.leftCursor > _0x4baa2b) {
+                    threadList.leftCursor--;
+                    threadList.added_posts.unshift(_0x37a2db(threadList.posts[threadList.leftCursor], threadList.comments));
+                }
+                while (threadList.rightCursor < lastPostIdx) {
+                    threadList.added_posts.push(_0x2f5caa(threadList.posts[threadList.rightCursor], threadList.comments));
+                    threadList.rightCursor++;
+                }
+                while (threadList.rightCursor > lastPostIdx) {
+                    threadList.added_posts.pop().remove();
+                    threadList.rightCursor--;
+                }
+                threadList.lastUpdate = timestamp;
+            }
+            function startLoadAnim() {
+                docEleData.spinner.classList = "loader fadeinfull";
+                docEleData.overlay.classList = "overlay fadein";
+                docEleData.progress.classList = "progress fadeinfull";
+            }
+            function endLoadAnim() {
+                docEleData.spinner.classList = "loader fadeout";
+                docEleData.overlay.classList = "overlay fadeout";
+                docEleData.progress.classList = "progress fadeout";
+            }
+            function clickChangelog() {
+                const containerEle = document.getElementById("cl-container");
+                const containerIcon = document.getElementById("cl-icon");
+                if (containerEle.classList == "hidden") {
+                    containerEle.classList = "active";
+                    containerIcon.innerHTML = '▲';
+                } else {
+                    containerEle.classList = "hidden";
+                    containerIcon.innerHTML = "▼";
+                }
+            }
+            function prepChangelog() {
+                const changelogEle = document.getElementById("changelog");
+                changelogEle.addEventListener("click", clickChangelog);
+            }
+            // function callHeroku() {
+            //     var req = new XMLHttpRequest();
+            //     req.open("GET", "https://still-falls-03671.herokuapp.com/p/24983");
+            //     req.send();
+            // }
+            function onWindowLoad() {
+                docEleData.stat = document.getElementById("status");
+                docEleData.ytID = document.getElementById('yt');
+                docEleData.spinner = document.getElementById("loader");
+                docEleData.overlay = document.getElementById("overlay");
+                docEleData.progress = document.getElementById("progress");
+                docEleData.playerContainer = document.getElementById("player-container");
+                postData.threads.hlgg.comments = document.getElementById("comments");
+                postData.threads.ggg.comments = document.getElementById("comments2");
+                _0x43005b(docEleData.ytID, 'ytID');
+                document.getElementById("load").addEventListener("click", onClickLoad);
+                // callHeroku();
+                prepChangelog();
+            }
+            window.addEventListener('load', _0x312ca4 => {
+                onWindowLoad();
+            });
+        })();
+    </script>
+</head>
+
+<body>
+    <div id="loader" class="loader fadeout"></div>
+    <div id="overlay" class="overlay fadeout"></div>
+    <p id="progress" class="progress fadeout">Loading...</p>
+    <div id="inputs">
+        <div class="row">
+            <div class="column">
+                <div class="row">
+                    <input type="text" id="yt" name="yt" placeholder="youtube video ID" />
+                    <button id="load">Load Video</button>
+                    <p id="status">Waiting for input...</p>
+                </div>
+            </div>
+            <div class="column">
+                <h2>/hlgg/</h2>
+            </div>
+            <div class="column">
+                <h2>/baubau/</h2>
+            </div>
+        </div>
+    </div>
+    <div class="row main">
+        <div class="column contentcol">
+            <div id="player-container" class="hidden">
+                <div id="player"></div>
+            </div>
+            <div class="info">
+                <h4 class="info-title">Instructions</h4>
+                <ol class="info-container">
+                    <li>Put the Youtube link inside field.</li>
+                    <li>Press load video.</li>
+                </ol>
+                <p class="info-text"><b>Note</b>: Loading 4chan data is intentionally slow because the archives are
+                    aggressive about blocking scripted requests. If it takes too long, check if the archives are down.
+                <p>
+                <p class="info-text"><b>Note</b>: Membership videos are supposed to be supported - it uses your YouTube
+                    cookies so you must be signed in. However, YouTube has broken embedding for some membership videos.
+                    You can check if embedding is broken by clicking Share -> Embed on the YouTube page; if the video
+                    doesn't load on youtube.com itself, it won't load here.
+                <p>
+                <h4 class="info-title cl-title no-select" id="changelog">Changelog <span id="cl-icon">▼</span></h4>
+                <div class="hidden" id="cl-container">
+                    <ul class="info-container">
+                        <li><b>2/15/23</b>
+                            <ul>
+                                <li>Moved to new servers. Service is now back online, just like Gura.</li>
+                            </ul>
+                        </li>
+                        <li><b>9/4/22</b>
+                            <ul>
+                                <li>Moved to archive.al because tokyochronos has blocked us. It should have videos
+                                    dating further back so it's better anyways.</li>
+                            </ul>
+                        </li>
+                        <li><b>8/26/22</b>
+                            <ul>
+                                <li>Add note about YouTube's fuckup with membership videos.</li>
+                            </ul>
+                        </li>
+                        <li><b>6/7/22</b>
+                            <ul>
+                                <li>Moved to tokyochronos now that wakarimasen is kill.</li>
+                                <li>Limit window of previous posts to 30 (from 100) when skipping through the video, to
+                                    limit image load and decrease chance of archives being unhappy.</li>
+                            </ul>
+                        </li>
+                        <li><b>3/18/22</b>
+                            <ul>
+                                <li>Added handling of wakarimasen returning guilty gear threads from /vg/ despite only
+                                    searching /vt/. This fixes the gura ASMR video.</li>
+                                <li>Cache 4chan data so revisits will instantly load data.</li>
+                            </ul>
+                        </li>
+                        <li><b>2/28/22</b>
+                            <ul>
+                                <li>Moved to wakarimasen.moe for /vt/ archiving due to alice.al disabling search.</li>
+                            </ul>
+                        </li>
+                        <li><b>2/17/22</b>
+                            <ul>
+                                <li>Moved to alice.al for /vt/ archiving due to nyaa shutdown.</li>
+                                <li>No longer retry infinitely if archives aren't responding.</li>
+                            </ul>
+                        </li>
+                        <li><b>1/29/22</b>
+                            <ul>
+                                <li>Fixed youtu.be parsing from YouTube share button.</li>
+                                <li>Minor UI tweaks.</li>
+                            </ul>
+                        </li>
+                        <li><b>1/23/22</b>
+                            <ul>
+                                <li>Add support for videos pre-/vt/ split.</li>
+                                <li>Add support for youtu.be links.</li>
+                                <li>Optimized 4chan data loading.</li>
+                            </ul>
+                        </li>
+                        <li><b>1/19/22</b>
+                            <ul>
+                                <li>Base functionality.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <p class="info-text">For any bugs/issues, contact: [TODO]
+                <p>
+            </div>
+        </div>
+        <div class="column submain contentcol comments">
+            <div id="comments" class="comments-container"></div>
+        </div>
+        <div class="column submain contentcol comments">
+            <div id="comments2" class="comments-container"></div>
+        </div>
+    </div>
+
+    <script>
+        Array.from(document.links).forEach((anchor) => {
+            const href = anchor.getAttribute("href");
+            if (href.startsWith("#")) {
+                anchor.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute("href").substring(1);
+                    const targetEl = document.getElementById(targetId);
+                    targetEl.scrollIntoView();
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>
