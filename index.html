@@ -15,29 +15,29 @@
             const archivePalanqJP = {
                 'root': "https://archive.palanq.win/",
                 'board': 'jp',
-                'image': (_0x10f2b8, _0x5b0527) => {
-                    return _0x10f2b8;
+                'image': (directLink, fullImageLink) => {
+                    return directLink;
                 }
             };
             const archiveVT = {
                 'root': "https://archive.palanq.win/",
                 'board': 'vt',
-                'image': (_0x5b73b8, _0xfb7aea) => {
-                    return _0x5b73b8;
+                'image': (directLink, fullImageLink) => {
+                    return directLink;
                 }
             };
             const archiveMoeJP = {
                 'root': 'https://archived.moe/',
                 'board': 'jp',
-                'image': (_0x30952f, _0x1c96af) => {
-                    if (!_0x1c96af) {
-                        return _0x30952f;
+                'image': (directLink, fullImageLink) => {
+                    if (!fullImageLink) {
+                        return directLink;
                     }
-                    const _0x45cbc7 = new URL(_0x1c96af).pathname.split('/');
-                    if (_0x45cbc7.length === 0x0) {
-                        return _0x30952f;
+                    const urlParsed = new URL(fullImageLink).pathname.split('/');
+                    if (urlParsed.length === 0) {
+                        return directLink;
                     }
-                    return "https://warosu.org/jp/full_image/" + _0x45cbc7[_0x45cbc7.length - 0x1];
+                    return "https://warosu.org/jp/full_image/" + urlParsed[urlParsed.length - 1];
                 }
             };
             const reallyOldThreadArr = [{
@@ -118,27 +118,27 @@
             }
             var postData = {
                 'liveStreamingDetails': {},
-                'start': 0x0,
+                'start': 0,
                 'threads': {
                     'hlgg': {
                         'posts': [],
                         'added_posts': [],
-                        'leftCursor': 0x0,
-                        'rightCursor': 0x0,
-                        'lastUpdate': 0x0,
+                        'leftCursor': 0,
+                        'rightCursor': 0,
+                        'lastUpdate': 0,
                         'comments': null
                     },
                     'ggg': {
                         'posts': [],
                         'added_posts': [],
-                        'leftCursor': 0x0,
-                        'rightCursor': 0x0,
+                        'leftCursor': 0,
+                        'rightCursor': 0,
                         'comments': null
                     }
                 },
-                'updateInterval': 0x0,
+                'updateInterval': 0,
                 'preSplit': false,
-                'ytID': 0x0
+                'ytID': 0
             };
             window.curVideoData = postData;
             var loadStatus = {
@@ -173,12 +173,12 @@
             function searchThreads(archiveData, threadName, pageNum, startTime, endTime, succFunc, errFunc) {
                 var apiURL = archiveData.root + "_/api/chan/search?board=" + archiveData.board + "&order=desc&subject=%22" + threadName + "%22&page=" + pageNum + '&end=' + endTime + '&start=' + startTime;
                 function onLoad() {
-                    if (this.status == 0xc8) {
+                    if (this.status == 200) {
                         var resParsed = JSON.parse(this.responseText);
                         if (resParsed.error) {
                             errFunc(resParsed.error);
                         } else {
-                            succFunc(resParsed[0x0].posts);
+                            succFunc(resParsed[0].posts);
                         }
                     } else {
                         errFunc("unable to get 4chan threads");
@@ -198,7 +198,7 @@
             function getThreadPost(archiveData, num, startTime, endTime, succFunc, errFunc) {
                 var apiURL = archiveData.root + "_/api/chan/thread?board=" + archiveData.board + "&num=" + num;
                 function onload() {
-                    if (this.status == 0xc8) {
+                    if (this.status == 200) {
                         var resParsed = JSON.parse(this.responseText);
                         if (resParsed.error) {
                             errFunc(resParsed.error);
@@ -232,22 +232,22 @@
                 req.send();
             }
             function fetchPosts(archiveData, titleText, vidMetadata, updateLoadFunc, succFunc, errFunc) {
-                var startTimeDiv = new Date(vidMetadata.actualStartTime).getTime() / 0x3e8;
-                var endTimeDiv = new Date(vidMetadata.actualEndTime).getTime() / 0x3e8;
+                var startTimeDiv = new Date(vidMetadata.actualStartTime).getTime() / 1000;
+                var endTimeDiv = new Date(vidMetadata.actualEndTime).getTime() / 1000;
                 var startTime = new Date(vidMetadata.actualStartTime);
-                startTime.setDate(startTime.getDate() - 0x1);
+                startTime.setDate(startTime.getDate() - 1);
                 startTime = strftime("%Y-%m-%d", startTime);
                 var endTime = new Date(vidMetadata.actualEndTime);
-                endTime.setDate(endTime.getDate() + 0x2);
+                endTime.setDate(endTime.getDate() + 2);
                 endTime = strftime("%Y-%m-%d", endTime);
                 var procData = {
-                    'started': 0x0,
-                    'fulfilled': 0x0,
+                    'started': 0,
+                    'fulfilled': 0,
                     'endOfLine': false,
                     'retries': {},
                     'thread_retries': {},
                     'all_posts': [],
-                    'out_of_range': 0x0
+                    'out_of_range': 0
                 };
                 function getAllPostFromThreadOPs(threadOPs, threadOPIdx, pageNum) {
                     window.ops = threadOPs;
@@ -256,14 +256,14 @@
                         return;
                     }
                     if (threadOPs[threadOPIdx].timestamp > endTimeDiv) {
-                        getAllPostFromThreadOPs(threadOPs, threadOPIdx + 0x1, pageNum);
+                        getAllPostFromThreadOPs(threadOPs, threadOPIdx + 1, pageNum);
                         return;
                     }
-                    procData.retries[pageNum][threadOPIdx] = procData.retries[pageNum][threadOPIdx] | 0x0;
+                    procData.retries[pageNum][threadOPIdx] = procData.retries[pageNum][threadOPIdx] | 0;
                     function storePostsInProcData(postsData) {
-                        procData.fulfilled += 0x1;
-                        if (postsData.length === 0x0) {
-                            procData.out_of_range += 0x1;
+                        procData.fulfilled += 1;
+                        if (postsData.length === 0) {
+                            procData.out_of_range += 1;
                         } else {
                             procData.all_posts = procData.all_posts.concat(postsData);
                         }
@@ -272,64 +272,64 @@
                             succFunc(procData.all_posts);
                         } else {
                             setTimeout(() => {
-                                getPostFromArchive(pageNum + 0x1);
-                            }, 0x2bc);
+                                getPostFromArchive(pageNum + 1);
+                            }, 700);
                         }
                     }
                     new Promise((succFunc, errFunc) => {
                         getThreadPost(pickArchive(threadOPs[threadOPIdx].timestamp), threadOPs[threadOPIdx].num, startTimeDiv, endTimeDiv, succFunc, errFunc);
-                    }).then(_0xeeab73 => {
-                        storePostsInProcData(_0xeeab73);
+                    }).then(postsData => {
+                        storePostsInProcData(postsData);
                     })['catch'](errMsg => {
-                        procData.retries[pageNum][threadOPIdx] += 0x1;
+                        procData.retries[pageNum][threadOPIdx] += 1;
                         if (procData.started === procData.fulfilled && procData.endOfLine) {
                             succFunc(procData.all_posts);
                         } else {
                             if (errMsg === "Thread not found.") {
-                                procData.retries[pageNum][threadOPIdx] = 0x0;
-                                procData.fulfilled += 0x1;
+                                procData.retries[pageNum][threadOPIdx] = 0;
+                                procData.fulfilled += 1;
                                 setTimeout(() => {
-                                    getAllPostFromThreadOPs(threadOPs, threadOPIdx + 0x1, pageNum);
-                                }, 0x190);
-                            } else if (procData.retries[pageNum][threadOPIdx] < 0x3) {
+                                    getAllPostFromThreadOPs(threadOPs, threadOPIdx + 1, pageNum);
+                                }, 400);
+                            } else if (procData.retries[pageNum][threadOPIdx] < 3) {
                                 setTimeout(() => {
                                     getAllPostFromThreadOPs(threadOPs, threadOPIdx, pageNum);
-                                }, 0x190);
+                                }, 400);
                             } else {
-                                procData.retries[pageNum][threadOPIdx] = 0x0;
-                                procData.fulfilled += 0x1;
+                                procData.retries[pageNum][threadOPIdx] = 0;
+                                procData.fulfilled += 1;
                                 setTimeout(() => {
-                                    getAllPostFromThreadOPs(threadOPs, threadOPIdx + 0x1, pageNum);
-                                }, 0x190);
+                                    getAllPostFromThreadOPs(threadOPs, threadOPIdx + 1, pageNum);
+                                }, 400);
                             }
                         }
                     });
                 }
                 function getPostFromArchive(pageNum, knownThreadArr = []) {
-                    procData.thread_retries[pageNum] = procData.thread_retries[pageNum] | 0x0;
+                    procData.thread_retries[pageNum] = procData.thread_retries[pageNum] | 0;
                     procData.retries[pageNum] = {};
                     new Promise((succFunc, errFunc) => {
-                        if (knownThreadArr.length === 0x0) {
+                        if (knownThreadArr.length === 0) {
                             searchThreads(archiveData, titleText, pageNum, startTime, endTime, succFunc, errFunc);
                         } else {
                             succFunc(knownThreadArr);
                         }
                     }).then(listThreads => {
-                        var threadFound = 0x0;
+                        var threadFound = 0;
                         for (const threadOP of listThreads) {
                             if (threadOP.timestamp > endTimeDiv) {
                                 continue;
                             }
-                            threadFound += 0x1;
+                            threadFound += 1;
                         }
-                        if (threadFound > 0x0) {
+                        if (threadFound > 0) {
                             procData.started += threadFound;
                             updateLoadFunc(procData.fulfilled, procData.started);
-                            getAllPostFromThreadOPs(listThreads, 0x0, pageNum);
+                            getAllPostFromThreadOPs(listThreads, 0, pageNum);
                         } else {
                             setTimeout(() => {
-                                getPostFromArchive(pageNum + 0x1);
-                            }, 0x2bc);
+                                getPostFromArchive(pageNum + 1);
+                            }, 700);
                         }
                     })['catch'](errMsg => {
                         if (errMsg == "No results found.") {
@@ -339,11 +339,11 @@
                         } else if (errMsg == "The search backend is currently unavailable.") {
                             errFunc("Archives search is down.");
                         } else {
-                            procData.thread_retries[pageNum] += 0x1;
-                            if (procData.thread_retries[pageNum] < 0x3) {
+                            procData.thread_retries[pageNum] += 1;
+                            if (procData.thread_retries[pageNum] < 3) {
                                 setTimeout(() => {
                                     getPostFromArchive(pageNum);
-                                }, 0x2bc);
+                                }, 700);
                             } else {
                                 errFunc("Unable to communicate with archives. Try again later.");
                             }
@@ -351,15 +351,15 @@
                     });
                 }
                 if (startTimeDiv < 0x5f5d7147) {
-                    getPostFromArchive(0x0, reallyOldThreadArr);
+                    getPostFromArchive(0, reallyOldThreadArr);
                 } else {
-                    getPostFromArchive(0x1);
+                    getPostFromArchive(1);
                 }
             }
             function getVidMetadata(vidID, succFunc, errFunc) {
                 function onload() {
                     var resParsed = JSON.parse(this.responseText);
-                    if (this.status == 0xc8) {
+                    if (this.status == 200) {
                         if (resParsed.error) {
                             errFunc(resParsed.error);
                         } else {
@@ -375,6 +375,7 @@
                     var errParsed = JSON.parse(this.responseText);
                     errFunc("unable to get yt video metadata: " + errParsed.error);
                 });
+                // TODO: change this into input value, create docs on how to create your own App Script Web App
                 req.open('GET', "https://script.google.com/macros/s/AKfycbx8aqG3kNaPkS5HCcsM0uXiNpFNKoxhO9yglvf0bZuwrvd90hZld2Kqt9CU0CqG34z2/exec?v=" + vidID);
                 req.send();
             }
@@ -384,23 +385,23 @@
                 }
                 const urlParsed = new URL(ytURL);
                 if (urlParsed.host === "youtu.be") {
-                    return urlParsed.pathname.substring(0x1);
+                    return urlParsed.pathname.substring(1);
                 }
                 const urlParams = new URL(ytURL).searchParams;
                 return urlParams.get('v');
             }
-            function generateFilesizeText(fileSize, inBit = false, _0x44c7f1 = 0x1) {
-                const _0x4e874a = inBit ? 0x3e8 : 0x400;
-                if (Math.abs(fileSize) < _0x4e874a) {
+            function generateFilesizeText(fileSize, inBit = false, _0x44c7f1 = 1) {
+                const divisor = inBit ? 1000 : 1024;
+                if (Math.abs(fileSize) < divisor) {
                     return fileSize + " B";
                 }
                 const _0x25d180 = inBit ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'] : ["KiB", "MiB", 'GiB', "TiB", "PiB", "EiB", "ZiB", "YiB"];
-                let _0x445d32 = -0x1;
-                const _0x25ae67 = 0xa ** _0x44c7f1;
+                let _0x445d32 = -1;
+                const _0x25ae67 = 10 ** _0x44c7f1;
                 do {
-                    fileSize /= _0x4e874a;
+                    fileSize /= divisor;
                     ++_0x445d32;
-                } while (Math.round(Math.abs(fileSize) * _0x25ae67) / _0x25ae67 >= _0x4e874a && _0x445d32 < _0x25d180.length - 0x1);
+                } while (Math.round(Math.abs(fileSize) * _0x25ae67) / _0x25ae67 >= divisor && _0x445d32 < _0x25d180.length - 1);
                 return fileSize.toFixed(_0x44c7f1) + " " + _0x25d180[_0x445d32];
             }
             function generatePostElement(postData) {
@@ -420,17 +421,17 @@
                 resEle.innerHTML = "<div class=\"postInfo desktop\">\n            <input type=\"checkbox\" value=\"delete\">\n            <span class=\"nameBlock\">\n                <span class=\"name\">" + postData.name + "</span>\n            </span>\n            <span class=\"dateTime\">" + postData.fourchan_date + "</span>\n            <span class=\"postNum desktop\"><a href=\"" + archiveData.root + archiveData.board + "/thread/" + postData.thread_num + '/#' + postData.num + "\" title=\"Link to this post\">No.</a><a href=\"" + archiveData.root + archiveData.board + "/thread/" + postData.thread_num + '/#' + postData.num + "\" title=\"Reply to this post\">" + postData.num + "</a></span>\n        </div>\n        " + postMediaEle + "\n        <blockquote class=\"postMessage\">" + postData.comment_processed + '</blockquote>';
                 return resEle;
             }
-            function _0x2f5caa(_0x2c52db, _0x26e522) {
-                var _0x50ccb4 = generatePostElement(_0x2c52db);
-                _0x26e522.appendChild(_0x50ccb4);
-                _0x26e522.scrollTop = _0x26e522.scrollHeight;
-                return _0x50ccb4;
+            function appendNewPostElement(postInfo, parentElement) {
+                var postElement = generatePostElement(postInfo);
+                parentElement.appendChild(postElement);
+                parentElement.scrollTop = parentElement.scrollHeight;
+                return postElement;
             }
-            function _0x37a2db(_0x239827, _0x2ea093) {
-                var _0x51effa = generatePostElement(_0x239827);
-                _0x2ea093.prepend(_0x51effa);
-                _0x2ea093.scrollTop = _0x2ea093.scrollHeight;
-                return _0x51effa;
+            function prependNewPostElement(postInfo, parentElement) {
+                var postElement = generatePostElement(postInfo);
+                parentElement.prepend(postElement);
+                parentElement.scrollTop = parentElement.scrollHeight;
+                return postElement;
             }
             function prepVidPlayer(vidID, succFunc, errFunc) {
                 if (ytVidPlayer === null) {
@@ -439,7 +440,7 @@
                         'width': "640",
                         'videoId': vidID,
                         'playerVars': {
-                            'playsinline': 0x1
+                            'playsinline': 1
                         },
                         'events': {
                             'onReady': () => {
@@ -464,25 +465,28 @@
             function clearPost() {
                 postData.threads.ggg.posts = [];
                 postData.threads.hlgg.posts = [];
-                for (const _0x4f5cf2 of postData.threads.ggg.added_posts) {
-                    _0x4f5cf2.remove();
+                for (const postEle of postData.threads.ggg.added_posts) {
+                    postEle.remove();
                 }
-                for (const _0x46dec7 of postData.threads.hlgg.added_posts) {
-                    _0x46dec7.remove();
+                for (const postEle of postData.threads.hlgg.added_posts) {
+                    postEle.remove();
                 }
                 postData.threads.ggg.added_posts = [];
                 postData.threads.hlgg.added_posts = [];
             }
+            function getVidCacheKey(vidID) {
+                return "vid-cache"
+            }
             function storeVidCache(vidID) {
                 try {
                     postData.ytID = vidID;
-                    window.localStorage.setItem("vid-cache", JSON.stringify(postData));
-                } catch (_0x4ac966) {
+                    window.localStorage.setItem(getVidCacheKey(vidID), JSON.stringify(postData));
+                } catch (errMsg) {
                     return;
                 }
             }
             function fetchVidCache(vidID) {
-                var resCache = window.localStorage.getItem("vid-cache");
+                var resCache = window.localStorage.getItem(getVidCacheKey(vidID));
                 if (resCache) {
                     const resParsed = JSON.parse(resCache);
                     if (resParsed.ytID == vidID) {
@@ -491,8 +495,8 @@
                 }
                 return false;
             }
-            function prepVidCacheData(_0x2ac0a9) {
-                var vidCacheData = window.localStorage.getItem("vid-cache");
+            function prepVidCacheData(vidID) {
+                var vidCacheData = window.localStorage.getItem(getVidCacheKey(vidID));
                 if (vidCacheData) {
                     const vidCacheDataParsed = JSON.parse(vidCacheData);
                     postData.livestreamingDetails = vidCacheDataParsed.livestreamingDetails;
@@ -528,7 +532,7 @@
                         toggleLoadingAnim();
                         postData.updateInterval = setInterval(() => {
                             updatePostData();
-                        }, 0x1f4);
+                        }, 500);
                     })["catch"](errMsg => {
                         loadStatus.iframeLoading = false;
                         loadStatus.ytAPI = false;
@@ -548,8 +552,8 @@
                     postData.start = new Date(vidMetadata.actualStartTime).getTime() / 1e3;
                     postData.preSplit = postData.start < 1611919211;
                     return new Promise((succFunc, errFunc) => {
-                        fetchPosts(postData.preSplit ? archivePalanqJP : archiveVT, "hololive global", vidMetadata, (_0x5c47a8, _0x135785) => {
-                            changeStat("Loading /hlgg/ data (" + _0x5c47a8 + '/' + _0x135785 + ")...");
+                        fetchPosts(postData.preSplit ? archivePalanqJP : archiveVT, "hololive global", vidMetadata, (progCurr, progAll) => {
+                            changeStat("Loading /hlgg/ data (" + progCurr + '/' + progAll + ")...");
                         }, succFunc, errFunc);
                     });
                 }).then(hlggPosts => {
@@ -558,8 +562,8 @@
                     if (postData.preSplit) return Promise.resolve([]);
                     changeStat("Loading /baubau/ data...");
                     return new Promise((succfunc, errFunc) => {
-                        fetchPosts(archiveVT, "baubau", postData.liveStreamingDetails, (_0x1b6709, _0x59316e) => {
-                            changeStat("Loading /baubau/ data (" + _0x1b6709 + '/' + _0x59316e + ')...');
+                        fetchPosts(archiveVT, "baubau", postData.liveStreamingDetails, (progCurr, progAll) => {
+                            changeStat("Loading /baubau/ data (" + progCurr + '/' + progAll + ')...');
                         }, succfunc, errFunc);
                     });
                 }).then(gggPosts => {
@@ -577,41 +581,41 @@
                     toggleLoadingAnim();
                     postData.updateInterval = setInterval(() => {
                         updatePostData();
-                    }, 0x1f4);
-                })["catch"](_0x5bd61e => {
+                    }, 500);
+                })["catch"](errMsg => {
                     loadStatus.iframeLoading = false;
                     loadStatus.ytAPI = false;
                     loadStatus.chanThreads = false;
                     toggleLoadingAnim("Waiting for input...");
-                    alert(_0x5bd61e);
+                    alert(errMsg);
                 });
             }
-            function _0x43005b(_0xa962a2, _0x19a5ee) {
-                var _0x5f1021 = window.localStorage.getItem(_0x19a5ee);
-                if (_0x5f1021) {
-                    _0xa962a2.value = _0x5f1021;
+            function initAndLoadValueFromCache(textElement, cacheKey) {
+                var savedValue = window.localStorage.getItem(cacheKey);
+                if (savedValue) {
+                    textElement.value = savedValue;
                 }
-                _0xa962a2.addEventListener("change", _0x57e502 => {
-                    window.localStorage.setItem(_0x19a5ee, _0xa962a2.value);
+                textElement.addEventListener("change", _0x57e502 => {
+                    window.localStorage.setItem(cacheKey, textElement.value);
                 });
             }
             function updatePostData() {
                 var timestamp = ytVidPlayer.getCurrentTime() + postData.start;
-                _0x490e20(postData.threads.hlgg, timestamp);
-                !postData.preSplit && _0x490e20(postData.threads.ggg, timestamp);
+                updateThreadPosts(postData.threads.hlgg, timestamp);
+                !postData.preSplit && updateThreadPosts(postData.threads.ggg, timestamp);
             }
-            function _0x490e20(threadList, timestamp) {
+            function updateThreadPosts(threadList, timestamp) {
                 var lastPostIdx = threadList.posts.length;
-                for (var idx = 0x0; idx < threadList.posts.length; idx++) {
+                for (var idx = 0; idx < threadList.posts.length; idx++) {
                     if (threadList.posts[idx].timestamp > timestamp) {
                         lastPostIdx = idx;
                         break;
                     }
                 }
                 const _0x3f509f = threadList.rightCursor;
-                var _0x4baa2b = Math.max(0x0, lastPostIdx - 0x1e);
+                var _0x4baa2b = Math.max(0, lastPostIdx - 30);
                 if (threadList.leftCursor > lastPostIdx || threadList.rightCursor < _0x4baa2b) {
-                    while (threadList.added_posts.length > 0x0) {
+                    while (threadList.added_posts.length > 0) {
                         threadList.added_posts.pop().remove();
                     }
                     threadList.leftCursor = _0x4baa2b;
@@ -619,10 +623,10 @@
                 }
                 while (threadList.leftCursor > _0x4baa2b) {
                     threadList.leftCursor--;
-                    threadList.added_posts.unshift(_0x37a2db(threadList.posts[threadList.leftCursor], threadList.comments));
+                    threadList.added_posts.unshift(prependNewPostElement(threadList.posts[threadList.leftCursor], threadList.comments));
                 }
                 while (threadList.rightCursor < lastPostIdx) {
-                    threadList.added_posts.push(_0x2f5caa(threadList.posts[threadList.rightCursor], threadList.comments));
+                    threadList.added_posts.push(appendNewPostElement(threadList.posts[threadList.rightCursor], threadList.comments));
                     threadList.rightCursor++;
                 }
                 while (threadList.rightCursor > lastPostIdx) {
@@ -656,11 +660,6 @@
                 const changelogEle = document.getElementById("changelog");
                 changelogEle.addEventListener("click", clickChangelog);
             }
-            // function callHeroku() {
-            //     var req = new XMLHttpRequest();
-            //     req.open("GET", "https://still-falls-03671.herokuapp.com/p/24983");
-            //     req.send();
-            // }
             function onWindowLoad() {
                 docEleData.stat = document.getElementById("status");
                 docEleData.ytID = document.getElementById('yt');
@@ -670,9 +669,8 @@
                 docEleData.playerContainer = document.getElementById("player-container");
                 postData.threads.hlgg.comments = document.getElementById("comments");
                 postData.threads.ggg.comments = document.getElementById("comments2");
-                _0x43005b(docEleData.ytID, 'ytID');
+                initAndLoadValueFromCache(docEleData.ytID, 'ytID');
                 document.getElementById("load").addEventListener("click", onClickLoad);
-                // callHeroku();
                 prepChangelog();
             }
             window.addEventListener('load', _0x312ca4 => {
@@ -725,63 +723,9 @@
                 <h4 class="info-title cl-title no-select" id="changelog">Changelog <span id="cl-icon">▼</span></h4>
                 <div class="hidden" id="cl-container">
                     <ul class="info-container">
-                        <li><b>2/15/23</b>
+                        <li><b>1/7/24</b>
                             <ul>
-                                <li>Moved to new servers. Service is now back online, just like Gura.</li>
-                            </ul>
-                        </li>
-                        <li><b>9/4/22</b>
-                            <ul>
-                                <li>Moved to archive.al because tokyochronos has blocked us. It should have videos
-                                    dating further back so it's better anyways.</li>
-                            </ul>
-                        </li>
-                        <li><b>8/26/22</b>
-                            <ul>
-                                <li>Add note about YouTube's fuckup with membership videos.</li>
-                            </ul>
-                        </li>
-                        <li><b>6/7/22</b>
-                            <ul>
-                                <li>Moved to tokyochronos now that wakarimasen is kill.</li>
-                                <li>Limit window of previous posts to 30 (from 100) when skipping through the video, to
-                                    limit image load and decrease chance of archives being unhappy.</li>
-                            </ul>
-                        </li>
-                        <li><b>3/18/22</b>
-                            <ul>
-                                <li>Added handling of wakarimasen returning guilty gear threads from /vg/ despite only
-                                    searching /vt/. This fixes the gura ASMR video.</li>
-                                <li>Cache 4chan data so revisits will instantly load data.</li>
-                            </ul>
-                        </li>
-                        <li><b>2/28/22</b>
-                            <ul>
-                                <li>Moved to wakarimasen.moe for /vt/ archiving due to alice.al disabling search.</li>
-                            </ul>
-                        </li>
-                        <li><b>2/17/22</b>
-                            <ul>
-                                <li>Moved to alice.al for /vt/ archiving due to nyaa shutdown.</li>
-                                <li>No longer retry infinitely if archives aren't responding.</li>
-                            </ul>
-                        </li>
-                        <li><b>1/29/22</b>
-                            <ul>
-                                <li>Fixed youtu.be parsing from YouTube share button.</li>
-                                <li>Minor UI tweaks.</li>
-                            </ul>
-                        </li>
-                        <li><b>1/23/22</b>
-                            <ul>
-                                <li>Add support for videos pre-/vt/ split.</li>
-                                <li>Add support for youtu.be links.</li>
-                                <li>Optimized 4chan data loading.</li>
-                            </ul>
-                        </li>
-                        <li><b>1/19/22</b>
-                            <ul>
-                                <li>Base functionality.</li>
+                                <li>Init /baubau/ version, unofficially and non-formally forked from https://chumputer.github.io/threadwatcher/</li>
                             </ul>
                         </li>
                     </ul>
